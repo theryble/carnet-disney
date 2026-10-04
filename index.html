@@ -91,6 +91,8 @@ body.magic .balloon { opacity: 0; }
   position: relative;
   z-index: 3;
   height: 100%;
+  box-sizing: border-box;
+  padding-top: 40px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -99,8 +101,8 @@ body.magic .balloon { opacity: 0; }
 
 .book {
   position: relative;
-  width: min(92vw, 860px, calc((100vh - 170px) * 4 / 3));
-  width: min(92vw, 860px, calc((100dvh - 170px) * 4 / 3));
+  width: min(92vw, 860px, calc((100vh - 230px) * 4 / 3));
+  width: min(92vw, 860px, calc((100dvh - 230px) * 4 / 3));
   container-type: inline-size;
   aspect-ratio: 4 / 3;
   max-width: 100%;
@@ -134,7 +136,7 @@ body.magic .balloon { opacity: 0; }
   background: var(--paper);
   border: 1px solid var(--paper-edge);
   color: var(--ink);
-  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  box-shadow: none;
   transform-origin: 50% 0;
   transition: transform .9s cubic-bezier(.55,.05,.3,1), opacity .9s ease, background-color 1.2s ease, color 1.2s ease;
   backface-visibility: hidden;
@@ -158,6 +160,7 @@ body.magic .balloon { opacity: 0; }
   border-radius: 4px;
   pointer-events: none;
 }
+.sheet.current { box-shadow: 0 18px 40px rgba(0,0,0,.45); }
 .sheet.flipped { transform: rotateX(172deg); opacity: 0; pointer-events: none; }
 .sheet > div, .sheet > p { position: relative; z-index: 1; }
 
@@ -242,6 +245,9 @@ body.magic .balloon { opacity: 0; }
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 10px;
   align-items: center;
   gap: 18px;
   font-family: var(--utility);
@@ -264,9 +270,18 @@ body.magic .balloon { opacity: 0; }
 .controls button:hover { border-color: var(--gold); color: var(--gold); }
 .controls button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .controls button:disabled { opacity: .3; cursor: default; }
+#sound { min-width: 7.5em; }
+#sound[aria-pressed="false"] { opacity: .6; }
 .count { font-variant-numeric: tabular-nums; min-width: 5ch; text-align: center; }
 .hint { font-family: var(--utility); font-size: .75rem; letter-spacing: .12em; color: var(--muted); margin: 0; }
 
+@media (orientation: portrait) {
+  .book {
+    aspect-ratio: 4 / 5;
+    width: min(92vw, 760px, calc((100vh - 230px) * 4 / 5));
+    width: min(92vw, 760px, calc((100dvh - 230px) * 4 / 5));
+  }
+}
 @media (min-width: 700px) {
   .balloon { width: 84px; }
   .controls { font-size: .95rem; gap: 24px; }
@@ -496,6 +511,7 @@ body.magic .balloon { opacity: 0; }
     <button type="button" id="prev">Retour</button>
     <span class="count" id="count" aria-live="polite">1 / 9</span>
     <button type="button" id="next">Suivant</button>
+    <button type="button" id="sound" aria-pressed="true">♪ Musique</button>
   </div>
   <p class="hint">Touche le carnet pour tourner la page</p>
 </main>
@@ -514,6 +530,110 @@ body.magic .balloon { opacity: 0; }
 
   sheets.forEach((s, i) => { s.style.zIndex = sheets.length - i; });
 
+  // music: "Joyeux anniversaire" as a soft music box, then an original fairy-tale waltz from the reveal page.
+  // Starts on the first touch (browsers block sound before that).
+  const NOTE = n => 440 * Math.pow(2, (n - 69) / 12);
+  const VOLUME = .45;
+  const PARTY = {
+    beat: .42, beats: 27,
+    melody: [[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],[67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,1],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,3],[0,2]],
+    bass: [48, 43, 43, 48, 48, 41, 43, 48]
+  };
+  const MAGIC = {
+    beat: .5, beats: 24,
+    melody: [[79,2],[82,1],[87,2],[86,.5],[84,.5],[84,2],[80,1],[82,3],[79,1],[80,1],[82,1],[84,1.5],[82,.5],[80,1],[79,1],[77,1],[74,1],[75,3]],
+    chords: [[51,58,63],[48,55,63],[44,51,60],[46,53,62],[51,58,63],[44,51,60],[46,53,62],[51,58,63]]
+  };
+  const sound = document.getElementById("sound");
+  let actx = null, master = null, bus = null, mode = "party", nextT = 0, muted = false;
+  function pluck(t, f, dur, vol, type, out) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(out);
+    o.start(t); o.stop(t + dur + .05);
+  }
+  function playParty(t0, out) {
+    const B = PARTY.beat;
+    let t = t0;
+    for (const [n, d] of PARTY.melody) {
+      if (n) { pluck(t, NOTE(n), Math.max(.9, d * B * 1.8), .2, "sine", out); pluck(t, NOTE(n) * 2, .5, .04, "triangle", out); }
+      t += d * B;
+    }
+    PARTY.bass.forEach((n, i) => pluck(t0 + (1 + 3 * i) * B, NOTE(n), 3 * B, .08, "triangle", out));
+  }
+  function playMagic(t0, out) {
+    const B = MAGIC.beat;
+    let t = t0;
+    for (const [n, d] of MAGIC.melody) {
+      // celesta-like: pure tone plus a bright, quickly fading overtone
+      pluck(t, NOTE(n), Math.max(1.2, d * B * 2), .16, "sine", out);
+      pluck(t, NOTE(n) * 4, .35, .025, "sine", out);
+      t += d * B;
+    }
+    MAGIC.chords.forEach(([root, a, b], i) => {
+      const bar = t0 + i * 3 * B;
+      pluck(bar, NOTE(root - 12), 3 * B, .09, "triangle", out);
+      for (const k of [1, 2]) { pluck(bar + k * B, NOTE(a), B * 1.2, .045, "sine", out); pluck(bar + k * B, NOTE(b), B * 1.2, .045, "sine", out); }
+    });
+    // a few sparkles
+    for (let i = 0; i < 6; i++) pluck(t0 + Math.random() * MAGIC.beats * B, NOTE(96 + [0, 3, 7, 10, 12][Math.floor(Math.random() * 5)]), .8, .03, "sine", out);
+  }
+  function glissando(t, out) {
+    [63, 67, 70, 75, 79, 82, 87, 91, 94, 99].forEach((n, i) => pluck(t + i * .06, NOTE(n), 1.8, .07, "triangle", out));
+  }
+  function newBus() {
+    const g = actx.createGain();
+    g.gain.value = 1;
+    g.connect(master);
+    return g;
+  }
+  function pump() {
+    const m = mode === "magic" ? MAGIC : PARTY;
+    const play = mode === "magic" ? playMagic : playParty;
+    while (nextT < actx.currentTime + 1.5) { play(nextT, bus); nextT += m.beats * m.beat; }
+    setTimeout(pump, 400);
+  }
+  function setMode(name) {
+    if (name === mode) return;
+    mode = name;
+    if (!actx) return;
+    const now = actx.currentTime;
+    const old = bus;
+    old.gain.setTargetAtTime(0, now, .25);
+    setTimeout(() => old.disconnect(), 2500);
+    bus = newBus();
+    if (name === "magic") { glissando(now + .3, bus); nextT = now + 1.4; }
+    else nextT = now + .4;
+  }
+  function startMusic() {
+    if (actx) { if (actx.state === "suspended" && !document.hidden) actx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    actx = new AC();
+    master = actx.createGain();
+    master.gain.value = muted ? 0 : VOLUME;
+    master.connect(actx.destination);
+    bus = newBus();
+    nextT = actx.currentTime + .15;
+    pump();
+  }
+  sound.addEventListener("click", e => {
+    e.stopPropagation();
+    if (!actx) { startMusic(); return; }
+    muted = !muted;
+    sound.setAttribute("aria-pressed", String(!muted));
+    sound.textContent = muted ? "♪ Coupée" : "♪ Musique";
+    master.gain.setTargetAtTime(muted ? 0 : VOLUME, actx.currentTime, .1);
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!actx) return;
+    if (document.hidden) actx.suspend(); else actx.resume();
+  });
+
   // first touch anywhere: switch to full screen (Android, iPad, desktop). That touch does not turn the page.
   let fsAsked = false;
   const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
@@ -528,6 +648,7 @@ body.magic .balloon { opacity: 0; }
     return true;
   }
   document.addEventListener("click", e => {
+    if (!e.target.closest("#sound")) startMusic();
     if (inFs()) return;
     if (enterFs() && !fsAsked) { fsAsked = true; e.stopPropagation(); e.preventDefault(); }
   }, true);
@@ -553,12 +674,13 @@ body.magic .balloon { opacity: 0; }
   });
 
   function render() {
-    sheets.forEach((s, i) => s.classList.toggle('flipped', i < page));
+    sheets.forEach((s, i) => { s.classList.toggle("flipped", i < page); s.classList.toggle("current", i === page); });
     count.textContent = `${page + 1} / ${sheets.length}`;
     prev.disabled = page === 0;
     next.disabled = page === sheets.length - 1;
     const cur = sheets[page];
     document.body.classList.toggle('magic', cur.hasAttribute('data-magic'));
+    setMode(cur.hasAttribute("data-magic") ? "magic" : "party");
     if (cur.classList.contains('reveal')) setTimeout(fireworks, reduce ? 0 : 600);
     if (cur.hasAttribute('data-confetti')) setTimeout(() => { fireworks(); popConfetti(); }, reduce ? 0 : 600);
   }
