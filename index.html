@@ -514,6 +514,24 @@ body.magic .balloon { opacity: 0; }
 
   sheets.forEach((s, i) => { s.style.zIndex = sheets.length - i; });
 
+  // first touch anywhere: switch to full screen (Android, iPad, desktop). That touch does not turn the page.
+  let fsAsked = false;
+  const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function enterFs() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) return false;
+    try {
+      const p = req.call(el, { navigationUI: "hide" });
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) { return false; }
+    return true;
+  }
+  document.addEventListener("click", e => {
+    if (inFs()) return;
+    if (enterFs() && !fsAsked) { fsAsked = true; e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
   // sprinkles on the sheets (little confetti dots and dashes)
   document.querySelectorAll('[data-sprinkles]').forEach(svg => {
     const colors = svg.dataset.sprinkles === 'gold' ? goldColors : partyColors;
