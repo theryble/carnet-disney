@@ -215,6 +215,12 @@ body.magic .balloon { opacity: 0; }
   color: var(--accent);
   font-variant-numeric: lining-nums;
 }
+.fort { width: min(46%, 190px); margin: 0 auto 8px; display: block; }
+.fort .hill { fill: var(--muted); opacity: .45; }
+.fort .wall { fill: var(--ink); }
+.fort .gate { fill: var(--paper); }
+.fort .pole { stroke: var(--ink); stroke-width: 2; }
+.fort .flag { fill: var(--accent); }
 .cake { width: min(34%, 130px); margin: 0 auto 6px; display: block; }
 .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flicker 1.1s ease-in-out infinite alternate; }
 .flame:nth-of-type(2n) { animation-duration: .9s; }
@@ -401,9 +407,23 @@ body.magic .balloon { opacity: 0; }
     <!-- 4b -->
     <section class="sheet">
       <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
-      <svg class="deco tl" viewBox="0 0 60 120" aria-hidden="true" style="color:#9b7be0"><use href="#balloon"/></svg>
       <svg class="deco br" viewBox="0 0 60 70" aria-hidden="true"><use href="#hat"/></svg>
-      <p class="line">Et si, après le château de <em>Namur</em>, on allait au château de…</p>
+      <div>
+        <svg class="fort" viewBox="0 0 220 120" aria-hidden="true">
+          <path class="hill" d="M0 120 C30 98 60 92 110 92 C160 92 190 98 220 120 Z"/>
+          <path class="wall" d="M28 96 V70 h8 v-6 h8 v6 h8 v-6 h8 v6 h8 v-6 h8 v6 H80 V96 Z M140 96 V70 h8 v-6 h8 v6 h8 v-6 h8 v6 h8 v-6 h8 v6 h4 V96 Z"/>
+          <path class="wall" d="M70 96 V44 h8 v-8 h9 v8 h9 v-8 h9 v8 h9 v-8 h9 v8 h9 v-8 h9 v8 h8 V96 Z"/>
+          <path class="wall" d="M44 98 V54 h6 v-7 h7 v7 h7 v-7 h7 v7 h6 V98 Z M146 98 V54 h6 v-7 h7 v7 h7 v-7 h7 v7 h6 V98 Z"/>
+          <path class="gate" d="M100 96 V78 a10 10 0 0 1 20 0 V96 Z"/>
+          <rect class="gate" x="86" y="56" width="6" height="10" rx="3"/>
+          <rect class="gate" x="128" y="56" width="6" height="10" rx="3"/>
+          <rect class="gate" x="55" y="64" width="5" height="9" rx="2.5"/>
+          <rect class="gate" x="160" y="64" width="5" height="9" rx="2.5"/>
+          <path class="pole" d="M110 36 V14" />
+          <path class="flag" d="M110 14 L128 19 L110 24 Z"/>
+        </svg>
+        <p class="line">Et si, après le château de <em>Namur</em>, on allait au château de…</p>
+      </div>
     </section>
 
     <!-- 5. reveal -->
