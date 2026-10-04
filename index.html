@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Le carnet de décembre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Parisienne&family=Jost:wght@400;500&display=swap">
+<style>
+/* Layout: one spiral-bound notebook on a birthday party backdrop (bunting, balloons, confetti).
+   On the reveal sheet the whole scene turns into a starry night with fireworks. Single deliberate look, two moods. */
+:root {
+  color-scheme: dark;
+  /* party mood (before the reveal) */
+  --bg: #2a0b22;
+  --paper: #fff2f5;
+  --paper-edge: #f3cbd8;
+  --ink: #5b1a3c;
+  --accent: #d6457a;
+  --gold: #c9962f;
+  --muted: #f0bcd0;
+  --frame: rgba(214,69,122,.25);
+  --hole: #2a0b22;
+  /* night mood (from the reveal) */
+  --n-bg: #060a1f;
+  --n-paper: #14204d;
+  --n-edge: #1d2b63;
+  --n-ink: #f3ead6;
+  --n-gold: #e3c37a;
+  --n-muted: #8f97bf;
+  --ring: #d4d6df;
+  --display: "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  --script: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
+  --utility: "Jost", "Helvetica Neue", Arial, sans-serif;
+}
+body.magic {
+  --bg: var(--n-bg);
+  --paper: var(--n-paper);
+  --paper-edge: var(--n-edge);
+  --ink: var(--n-ink);
+  --accent: var(--n-gold);
+  --gold: var(--n-gold);
+  --muted: var(--n-muted);
+  --frame: rgba(227,195,122,.28);
+  --hole: var(--n-bg);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--display);
+  padding-inline: 16px;
+  padding-block: 0;
+  overflow: hidden;
+}
+
+/* backdrops */
+.backdrop { position: fixed; inset: 0; pointer-events: none; transition: opacity 1.4s ease; }
+.bg-party { background: radial-gradient(110% 80% at 50% 10%, #5a1747 0%, #2a0b22 70%); }
+.bg-night { background: radial-gradient(120% 90% at 50% 0%, #0b1230 0%, #060a1f 70%); opacity: 0; }
+body.magic .bg-party { opacity: 0; }
+body.magic .bg-night { opacity: 1; }
+#sky { opacity: 0; transition: opacity 1.6s ease; }
+body.magic #sky { opacity: 1; }
+#sky, #confetti, #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#confetti { z-index: 1; }
+#fx { z-index: 6; }
+
+/* bunting across the top of the screen */
+#bunting { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 1; pointer-events: none; transition: transform 1.2s ease, opacity 1.2s ease; }
+body.magic #bunting { transform: translateY(-100px); opacity: 0; }
+
+/* balloons drifting on both sides */
+.balloons { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.balloon {
+  position: absolute;
+  bottom: -160px;
+  width: 64px;
+  animation: rise linear infinite;
+  transition: opacity 1s ease;
+}
+.balloon svg { display: block; width: 100%; height: auto; animation: sway 4s ease-in-out infinite alternate; }
+@keyframes rise { from { transform: translateY(0); } to { transform: translateY(calc(-100vh - 220px)); } }
+@keyframes sway { from { transform: rotate(-6deg) translateX(-6px); } to { transform: rotate(6deg) translateX(6px); } }
+body.magic .balloon { opacity: 0; }
+
+.stage {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 22px;
+}
+
+.book {
+  position: relative;
+  width: min(92vw, 560px);
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  perspective: 1600px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.book:focus-visible { outline: 2px solid var(--gold); outline-offset: 10px; border-radius: 14px; }
+
+.rings {
+  position: absolute;
+  top: -14px; left: 7%; right: 7%;
+  height: 30px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 50;
+  pointer-events: none;
+}
+.rings span {
+  width: 9px; height: 30px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b8fa0, var(--ring) 45%, #fff 55%, #8b8fa0);
+  box-shadow: 0 2px 3px rgba(0,0,0,.5);
+}
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  color: var(--ink);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  transform-origin: 50% 0;
+  transition: transform .9s cubic-bezier(.55,.05,.3,1), opacity .9s ease, background-color 1.2s ease, color 1.2s ease;
+  backface-visibility: hidden;
+  display: grid;
+  place-items: center;
+  padding: 44px 13% 30px;
+  text-align: center;
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 10px; left: 7%; right: 7%;
+  height: 8px;
+  background: radial-gradient(circle, var(--hole) 3.5px, transparent 4px) 0 0 / calc(100% / 11.6) 8px repeat-x;
+}
+.sheet::after {
+  content: "";
+  position: absolute;
+  inset: 32px 18px 18px;
+  border: 1px solid var(--frame);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.sheet.flipped { transform: rotateX(172deg); opacity: 0; pointer-events: none; }
+.sheet > div, .sheet > p { position: relative; z-index: 1; }
+
+/* small corner decorations on the sheets */
+.deco { position: absolute; z-index: 0; pointer-events: none; }
+.deco.tr { top: 40px; right: 24px; width: 15%; }
+.deco.tl { top: 40px; left: 24px; width: 13%; }
+.deco.bl { bottom: 24px; left: 24px; width: 15%; }
+.deco.br { bottom: 24px; right: 24px; width: 15%; }
+.sprinkles { position: absolute; inset: 32px 18px 18px; z-index: 0; pointer-events: none; }
+
+.line {
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.5rem, 5.2vw, 2.45rem);
+  line-height: 1.25;
+  text-wrap: balance;
+  max-width: 21ch;
+  margin: 0;
+}
+.line em { font-style: normal; color: var(--accent); }
+.date { color: var(--accent); font-style: normal; }
+
+.cover h1 {
+  font-family: var(--script);
+  font-weight: 400;
+  color: var(--accent);
+  font-size: clamp(2.5rem, 9.5vw, 4.2rem);
+  margin: 0;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.cover p {
+  margin: 12px 0 0;
+  font-family: var(--utility);
+  font-size: .76rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.heart { width: 44px; margin: 0 auto 10px; display: block; fill: var(--accent); animation: beat 1.4s ease-in-out infinite; transform-origin: 50% 60%; }
+@keyframes beat { 0%, 60%, 100% { transform: scale(1); } 20% { transform: scale(1.14); } 40% { transform: scale(.96); } }
+.nickname h1 { font-size: clamp(3rem, 12vw, 5.2rem); }
+.cover p.age {
+  margin: 4px 0 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+.age span {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 1.5em;
+  color: var(--accent);
+  font-variant-numeric: lining-nums;
+}
+.cake { width: min(34%, 130px); margin: 0 auto 6px; display: block; }
+.flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flicker 1.1s ease-in-out infinite alternate; }
+.flame:nth-of-type(2n) { animation-duration: .9s; }
+@keyframes flicker { from { transform: scale(1, 1) rotate(-3deg); } to { transform: scale(.85, 1.12) rotate(3deg); } }
+
+.reveal .big {
+  font-family: var(--script);
+  font-weight: 400;
+  color: var(--gold);
+  font-size: clamp(2.6rem, 10.5vw, 4.8rem);
+  line-height: 1.05;
+  margin: 0;
+  text-shadow: 0 0 24px rgba(227,195,122,.35);
+}
+.reveal .castle { width: min(58%, 210px); margin: 0 auto 6px; display: block; }
+.reveal .castle path, .reveal .castle rect { fill: var(--n-gold); }
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-family: var(--utility);
+  font-size: .8rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.controls button {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: #fff;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.controls button:hover { border-color: var(--gold); color: var(--gold); }
+.controls button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.controls button:disabled { opacity: .3; cursor: default; }
+.count { font-variant-numeric: tabular-nums; min-width: 5ch; text-align: center; }
+.hint { font-family: var(--utility); font-size: .75rem; letter-spacing: .12em; color: var(--muted); margin: 0; }
+
+@media (max-width: 480px) {
+  .balloon { width: 46px; }
+  .deco.tl, .deco.tr { top: 38px; }
+  .cake { width: 26%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: opacity .3s ease, background-color .3s ease; }
+  .sheet.flipped { transform: none; }
+  .balloon, .balloon svg, .flame, .heart { animation: none; }
+  .balloon { bottom: auto; }
+}
+
+/* Printing from the local file: one sentence per page */
+@media print {
+  @page { size: A5 landscape; margin: 0; }
+  body { overflow: visible; padding: 0; }
+  .backdrop, #sky, #confetti, #fx, #bunting, .balloons, .controls, .hint, .rings { display: none !important; }
+  .stage { display: block; height: auto; }
+  .book { width: 100%; aspect-ratio: auto; perspective: none; }
+  .sheet, .sheet.flipped {
+    position: relative; inset: auto; opacity: 1; transform: none;
+    width: 210mm; height: 148mm; border-radius: 0;
+    page-break-after: always; break-after: page;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .sheet.night { background: var(--n-paper); color: var(--n-ink); }
+}
+</style>
+</head>
+<body>
+
+<div class="backdrop bg-party" aria-hidden="true"></div>
+<div class="backdrop bg-night" aria-hidden="true"></div>
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<svg id="bunting" aria-hidden="true"></svg>
+<div class="balloons" id="balloons" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<!-- reusable drawings -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="balloon" viewBox="0 0 60 120">
+      <path d="M30 4 C48 4 56 20 56 34 C56 54 40 68 30 72 C20 68 4 54 4 34 C4 20 12 4 30 4 Z" fill="currentColor"/>
+      <path d="M18 18 C22 12 28 11 30 11" stroke="#fff" stroke-opacity=".55" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M26 72 L34 72 L30 78 Z" fill="currentColor"/>
+      <path d="M30 78 C26 88 34 96 30 106 C27 112 31 116 30 120" stroke="#e9d8e2" stroke-opacity=".7" stroke-width="1.2" fill="none"/>
+    </symbol>
+    <symbol id="gift" viewBox="0 0 64 64">
+      <rect x="6" y="24" width="52" height="36" rx="3" fill="#d6457a"/>
+      <rect x="2" y="16" width="60" height="12" rx="3" fill="#e46b95"/>
+      <rect x="28" y="16" width="8" height="44" fill="#c9962f"/>
+      <path d="M32 16 C22 2 8 8 16 14 C20 17 28 16 32 16 Z M32 16 C42 2 56 8 48 14 C44 17 36 16 32 16 Z" fill="none" stroke="#c9962f" stroke-width="3"/>
+    </symbol>
+    <symbol id="hat" viewBox="0 0 60 70">
+      <path d="M30 4 L54 64 L6 64 Z" fill="#7cc4c8"/>
+      <path d="M18 34 L42 34 M13 48 L47 48" stroke="#fff2f5" stroke-width="5"/>
+      <circle cx="30" cy="6" r="6" fill="#c9962f"/>
+      <rect x="4" y="62" width="52" height="6" rx="3" fill="#d6457a"/>
+    </symbol>
+    <symbol id="candle" viewBox="0 0 30 80">
+      <rect x="9" y="26" width="12" height="52" rx="2" fill="#7cc4c8"/>
+      <path d="M9 36 L21 30 M9 50 L21 44 M9 64 L21 58" stroke="#fff2f5" stroke-width="3"/>
+      <path class="flame" d="M15 4 C20 12 21 18 15 22 C9 18 10 12 15 4 Z" fill="#f2b33d"/>
+    </symbol>
+    <symbol id="moon" viewBox="0 0 64 64">
+      <path d="M40 6 C24 8 14 22 16 36 C18 50 32 60 46 56 C36 54 28 46 27 34 C26 22 32 12 40 6 Z" fill="#e3c37a"/>
+      <circle cx="52" cy="14" r="2" fill="#f3ead6"/>
+      <circle cx="58" cy="30" r="1.5" fill="#f3ead6"/>
+      <circle cx="8" cy="12" r="1.5" fill="#f3ead6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="stage">
+  <div class="book" id="book" tabindex="0" role="button" aria-label="Tourner la page">
+    <div class="rings" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <!-- 0. nickname -->
+    <section class="sheet cover nickname">
+      <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
+      <svg class="deco tl" viewBox="0 0 60 120" aria-hidden="true" style="color:#f2b33d"><use href="#balloon"/></svg>
+      <svg class="deco tr" viewBox="0 0 60 120" aria-hidden="true" style="color:#d6457a"><use href="#balloon"/></svg>
+      <div>
+        <svg class="heart" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 34 C8 25 2 18 2 11 C2 5 7 2 11.5 2 C15 2 18 4 20 7 C22 4 25 2 28.5 2 C33 2 38 5 38 11 C38 18 32 25 20 34 Z"/></svg>
+        <h1>Ma nain nain</h1>
+      </div>
+    </section>
+
+    <!-- 1. cover -->
+    <section class="sheet cover">
+      <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
+      <div>
+        <svg class="cake" viewBox="0 0 140 120" aria-hidden="true">
+          <rect x="34" y="18" width="7" height="26" rx="2" fill="#7cc4c8"/>
+          <rect x="66" y="12" width="7" height="32" rx="2" fill="#f2b33d"/>
+          <rect x="98" y="18" width="7" height="26" rx="2" fill="#d6457a"/>
+          <path class="flame" d="M37.5 4 C41 10 41 14 37.5 17 C34 14 34 10 37.5 4 Z" fill="#f2b33d"/>
+          <path class="flame" d="M69.5 0 C73 6 73 9 69.5 12 C66 9 66 6 69.5 0 Z" fill="#f2b33d"/>
+          <path class="flame" d="M101.5 4 C105 10 105 14 101.5 17 C98 14 98 10 101.5 4 Z" fill="#f2b33d"/>
+          <rect x="18" y="44" width="104" height="30" rx="6" fill="#f6a8c2"/>
+          <path d="M18 54 C26 64 34 50 42 60 C50 70 58 52 66 62 C74 72 82 52 90 62 C98 72 106 52 114 60 C118 64 122 58 122 56 V50 H18 Z" fill="#fff2f5"/>
+          <rect x="8" y="74" width="124" height="34" rx="6" fill="#d6457a"/>
+          <path d="M8 84 C18 94 26 80 36 90 C46 100 54 82 64 92 C74 102 82 82 92 92 C102 102 112 82 122 90 C128 94 132 88 132 86 V80 H8 Z" fill="#f6a8c2"/>
+          <rect x="0" y="108" width="140" height="8" rx="4" fill="#c9962f"/>
+        </svg>
+        <h1>Pour toi</h1>
+        <p class="age">pour tes <span>31</span> ans</p>
+        <p>Ouvre doucement</p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="sheet">
+      <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
+      <svg class="deco tr" viewBox="0 0 60 120" aria-hidden="true" style="color:#d6457a"><use href="#balloon"/></svg>
+      <svg class="deco bl" viewBox="0 0 64 64" aria-hidden="true"><use href="#gift"/></svg>
+      <p class="line">Et si finalement ton anniversaire n'était pas encore <em>terminé</em>…</p>
+    </section>
+
+    <!-- 3 -->
+    <section class="sheet">
+      <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
+      <svg class="deco tl" viewBox="0 0 60 70" aria-hidden="true"><use href="#hat"/></svg>
+      <svg class="deco br" viewBox="0 0 60 120" aria-hidden="true" style="color:#7cc4c8"><use href="#balloon"/></svg>
+      <p class="line">Et si on s'éclipsait encore quelques jours pour en <em>profiter</em> ?</p>
+    </section>
+
+    <!-- 4 -->
+    <section class="sheet">
+      <svg class="sprinkles" data-sprinkles aria-hidden="true"></svg>
+      <svg class="deco tr" viewBox="0 0 30 80" aria-hidden="true" style="width:7%"><use href="#candle"/></svg>
+      <svg class="deco bl" viewBox="0 0 64 64" aria-hidden="true"><use href="#gift"/></svg>
+      <p class="line">Et si, les <span class="date">17 &amp; 18 décembre</span>, on allait profiter deux jours de…</p>
+    </section>
+
+    <!-- 5. reveal -->
+    <section class="sheet reveal night" data-magic>
+      <div>
+        <svg class="castle" viewBox="0 0 200 110" aria-hidden="true">
+          <path d="M100 4 L106 30 L94 30 Z"/>
+          <rect x="94" y="30" width="12" height="40"/>
+          <path d="M70 26 L75 46 L65 46 Z"/>
+          <rect x="65" y="46" width="10" height="30"/>
+          <path d="M130 26 L135 46 L125 46 Z"/>
+          <rect x="125" y="46" width="10" height="30"/>
+          <path d="M42 48 L46 64 L38 64 Z"/>
+          <rect x="38" y="64" width="8" height="22"/>
+          <path d="M158 48 L162 64 L154 64 Z"/>
+          <rect x="154" y="64" width="8" height="22"/>
+          <path d="M30 86 H170 V108 H112 V96 A12 12 0 0 0 88 96 V108 H30 Z"/>
+          <rect x="78" y="62" width="44" height="26"/>
+        </svg>
+        <p class="big">Disneyland Paris !!!</p>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="sheet night" data-magic>
+      <svg class="deco tr" viewBox="0 0 64 64" aria-hidden="true"><use href="#moon"/></svg>
+      <p class="line">Et une petite nuit d'hôtel, <em>bien sûr</em>.</p>
+    </section>
+
+    <!-- 7. end -->
+    <section class="sheet cover night" data-magic data-confetti>
+      <svg class="sprinkles" data-sprinkles="gold" aria-hidden="true"></svg>
+      <div>
+        <svg class="cake" viewBox="0 0 140 120" aria-hidden="true">
+          <rect x="34" y="18" width="7" height="26" rx="2" fill="#7cc4c8"/>
+          <rect x="66" y="12" width="7" height="32" rx="2" fill="#f2b33d"/>
+          <rect x="98" y="18" width="7" height="26" rx="2" fill="#d6457a"/>
+          <path class="flame" d="M37.5 4 C41 10 41 14 37.5 17 C34 14 34 10 37.5 4 Z" fill="#f2b33d"/>
+          <path class="flame" d="M69.5 0 C73 6 73 9 69.5 12 C66 9 66 6 69.5 0 Z" fill="#f2b33d"/>
+          <path class="flame" d="M101.5 4 C105 10 105 14 101.5 17 C98 14 98 10 101.5 4 Z" fill="#f2b33d"/>
+          <rect x="18" y="44" width="104" height="30" rx="6" fill="#f6a8c2"/>
+          <path d="M18 54 C26 64 34 50 42 60 C50 70 58 52 66 62 C74 72 82 52 90 62 C98 72 106 52 114 60 C118 64 122 58 122 56 V50 H18 Z" fill="#fff2f5"/>
+          <rect x="8" y="74" width="124" height="34" rx="6" fill="#d6457a"/>
+          <path d="M8 84 C18 94 26 80 36 90 C46 100 54 82 64 92 C74 102 82 82 92 92 C102 102 112 82 122 90 C128 94 132 88 132 86 V80 H8 Z" fill="#f6a8c2"/>
+          <rect x="0" y="108" width="140" height="8" rx="4" fill="#e3c37a"/>
+        </svg>
+        <h1>Joyeux anniversaire</h1>
+        <p>17 · 18 décembre</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="prev">Retour</button>
+    <span class="count" id="count" aria-live="polite">1 / 8</span>
+    <button type="button" id="next">Suivant</button>
+  </div>
+  <p class="hint">Touche le carnet pour tourner la page</p>
+</main>
+
+<script>
+(() => {
+  const sheets = [...document.querySelectorAll('.sheet')];
+  const book = document.getElementById('book');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const count = document.getElementById('count');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const partyColors = ['#d6457a', '#f2b33d', '#7cc4c8', '#f6a8c2', '#c9962f', '#9b7be0'];
+  const goldColors = ['#e3c37a', '#f3ead6', '#c9962f'];
+  let page = 0;
+
+  sheets.forEach((s, i) => { s.style.zIndex = sheets.length - i; });
+
+  // sprinkles on the sheets (little confetti dots and dashes)
+  document.querySelectorAll('[data-sprinkles]').forEach(svg => {
+    const colors = svg.dataset.sprinkles === 'gold' ? goldColors : partyColors;
+    svg.setAttribute('viewBox', '0 0 100 75');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    let out = '';
+    for (let i = 0; i < 26; i++) {
+      // keep sprinkles near the edges so the sentence stays clear
+      const edge = Math.random();
+      let x = Math.random() * 100, y = Math.random() * 75;
+      if (edge < .5) x = Math.random() < .5 ? Math.random() * 12 : 88 + Math.random() * 12;
+      else y = Math.random() < .5 ? Math.random() * 10 : 65 + Math.random() * 10;
+      const c = colors[i % colors.length];
+      out += Math.random() < .5
+        ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r=".7" fill="${c}"/>`
+        : `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="2.4" height=".8" rx=".4" fill="${c}" transform="rotate(${Math.round(Math.random()*180)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    svg.innerHTML = out;
+  });
+
+  function render() {
+    sheets.forEach((s, i) => s.classList.toggle('flipped', i < page));
+    count.textContent = `${page + 1} / ${sheets.length}`;
+    prev.disabled = page === 0;
+    next.disabled = page === sheets.length - 1;
+    const cur = sheets[page];
+    document.body.classList.toggle('magic', cur.hasAttribute('data-magic'));
+    if (cur.classList.contains('reveal')) setTimeout(fireworks, reduce ? 0 : 600);
+    if (cur.hasAttribute('data-confetti')) setTimeout(() => { fireworks(); popConfetti(); }, reduce ? 0 : 600);
+  }
+  function go(d) {
+    const p = Math.max(0, Math.min(sheets.length - 1, page + d));
+    if (p !== page) { page = p; render(); }
+  }
+  book.addEventListener('click', () => go(1));
+  book.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(1); } });
+  next.addEventListener('click', () => go(1));
+  prev.addEventListener('click', () => go(-1));
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+
+  function fit(canvas) {
+    const dpr = devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  // bunting garland
+  const bunting = document.getElementById('bunting');
+  function drawBunting() {
+    const W = innerWidth, sag = Math.min(46, W * .06), step = W < 500 ? 34 : 44;
+    const yAt = x => 8 + sag * 4 * (x / W) * (1 - x / W);
+    let out = `<path d="M0 8 Q ${W / 2} ${8 + sag * 2} ${W} 8" stroke="#f0bcd0" stroke-opacity=".6" stroke-width="1.5" fill="none"/>`;
+    let i = 0;
+    for (let x = step / 2; x < W - step / 3; x += step, i++) {
+      const y = yAt(x), w = step * .7;
+      const slope = Math.atan2(yAt(x + 1) - y, 1) * 180 / Math.PI;
+      out += `<path d="M${-w / 2} 0 L${w / 2} 0 L0 ${w * 1.05} Z" fill="${partyColors[i % partyColors.length]}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${slope.toFixed(1)})"/>`;
+    }
+    bunting.setAttribute('viewBox', `0 0 ${W} 90`);
+    bunting.innerHTML = out;
+  }
+
+  // balloons
+  const balloons = document.getElementById('balloons');
+  function makeBalloons() {
+    balloons.innerHTML = '';
+    const n = innerWidth < 500 ? 6 : 10;
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('div');
+      b.className = 'balloon';
+      const left = i % 2 ? 82 + Math.random() * 14 : 1 + Math.random() * 14;
+      b.style.left = left + '%';
+      b.style.color = partyColors[i % partyColors.length];
+      b.style.animationDuration = (14 + Math.random() * 10) + 's';
+      b.style.animationDelay = (-Math.random() * 22) + 's';
+      if (reduce) b.style.top = (15 + Math.random() * 60) + '%';
+      b.innerHTML = '<svg viewBox="0 0 60 120"><use href="#balloon"/></svg>';
+      balloons.appendChild(b);
+    }
+  }
+
+  // falling confetti (party mood only)
+  const conf = document.getElementById('confetti');
+  let cctx = fit(conf), bits = [];
+  function newBit(top) {
+    return {
+      x: Math.random() * innerWidth, y: top ? -10 : Math.random() * innerHeight,
+      w: 5 + Math.random() * 5, h: 3 + Math.random() * 3,
+      vy: .6 + Math.random() * 1.1, vx: (Math.random() - .5) * .6,
+      a: Math.random() * 6, va: (Math.random() - .5) * .12,
+      c: partyColors[Math.floor(Math.random() * partyColors.length)], burst: false
+    };
+  }
+  function seedConfetti() { bits = Array.from({ length: Math.round(innerWidth / 14) }, () => newBit(false)); }
+  function drawConfetti() {
+    cctx.clearRect(0, 0, innerWidth, innerHeight);
+    const magic = document.body.classList.contains('magic');
+    bits = bits.filter(b => b.y < innerHeight + 20);
+    for (const b of bits) {
+      if (!reduce) {
+        b.x += b.vx; b.y += b.vy; b.a += b.va;
+        if (b.burst) { b.vy += .06; b.vx *= .98; }
+      }
+      cctx.save();
+      cctx.translate(b.x, b.y); cctx.rotate(b.a);
+      cctx.fillStyle = b.c;
+      cctx.globalAlpha = magic && !b.burst ? .0 : .9;
+      cctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.a * 2)) + .5);
+      cctx.restore();
+    }
+    if (!magic && bits.length < innerWidth / 14) bits.push(newBit(true));
+    if (!reduce) requestAnimationFrame(drawConfetti);
+  }
+  function popConfetti() {
+    if (reduce) return;
+    for (let i = 0; i < 140; i++) {
+      const b = newBit(false);
+      const a = -Math.PI / 2 + (Math.random() - .5) * 1.6, v = 5 + Math.random() * 6;
+      b.x = innerWidth / 2; b.y = innerHeight * .55;
+      b.vx = Math.cos(a) * v; b.vy = Math.sin(a) * v; b.burst = true;
+      bits.push(b);
+    }
+  }
+
+  // stars (night mood)
+  const sky = document.getElementById('sky');
+  let sctx = fit(sky), stars = [];
+  function seedStars() {
+    stars = Array.from({ length: Math.round(innerWidth * innerHeight / 3500) }, () => ({
+      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+      r: Math.random() * 1.2 + .2, p: Math.random() * Math.PI * 2
+    }));
+  }
+  function drawSky(t) {
+    sctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const s of stars) {
+      const a = reduce ? .7 : .45 + .45 * Math.sin(t / 900 + s.p);
+      sctx.fillStyle = `rgba(243,234,214,${a})`;
+      sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, 7); sctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(drawSky);
+  }
+
+  // fireworks
+  const fx = document.getElementById('fx');
+  let fctx = fit(fx), parts = [], running = false;
+  const fwColors = ['227,195,122', '243,234,214', '240,160,190', '150,190,255'];
+  function burst(x, y) {
+    const c = fwColors[Math.floor(Math.random() * fwColors.length)];
+    for (let i = 0; i < 70; i++) {
+      const a = Math.random() * Math.PI * 2, v = Math.random() * 4 + 1.5;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, c });
+    }
+  }
+  function fireworks() {
+    if (reduce) return;
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => burst(innerWidth * (.15 + Math.random() * .7), innerHeight * (.12 + Math.random() * .35)), i * 320);
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+  function tick() {
+    fctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(p => p.life > 0);
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy; p.vy += .05; p.vx *= .985; p.vy *= .985; p.life -= .012;
+      fctx.fillStyle = `rgba(${p.c},${Math.max(p.life, 0)})`;
+      fctx.beginPath(); fctx.arc(p.x, p.y, 1.8, 0, 7); fctx.fill();
+    }
+    if (parts.length) requestAnimationFrame(tick); else { running = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+
+  function setup() {
+    cctx = fit(conf); sctx = fit(sky); fctx = fit(fx);
+    drawBunting(); seedStars(); seedConfetti();
+    if (reduce) { drawSky(0); drawConfetti(); }
+  }
+  let resizeTimer;
+  addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { setup(); makeBalloons(); }, 150); });
+
+  setup();
+  makeBalloons();
+  if (!reduce) { requestAnimationFrame(drawSky); requestAnimationFrame(drawConfetti); }
+  render();
+})();
+</script>
+</body>
+</html>
